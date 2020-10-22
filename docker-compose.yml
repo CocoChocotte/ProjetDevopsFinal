@@ -39,6 +39,7 @@ services:
       - prometheus
       - grafana
       - nginx
+      - nodeexporter
           
   nginx:
     image: nginx:latest
@@ -51,6 +52,7 @@ services:
       - sonarqube
       - grafana
       - prometheus
+      - nodeexporter
     networks:
       - nginx
       
@@ -61,6 +63,27 @@ services:
     networks:
       - sonarqube
       - nginx
+      
+  nodeexporter:
+    image: prom/node-exporter:latest
+    container_name: nodeexporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    expose:
+      - 9100
+    networks:
+      - nginx
+      - nodeexporter
+      - grafana
+      - prometheus
 
 volumes:
   git-data:
@@ -71,4 +94,5 @@ networks:
   sonarqube:
   grafana:
   prometheus:
+  nodeexporter:
 
