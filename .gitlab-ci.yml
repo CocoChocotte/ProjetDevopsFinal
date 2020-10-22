@@ -1,0 +1,36 @@
+stages:
+  - test
+  - deploy
+  - notify
+
+test:
+  stage: test
+  script:
+    - echo "test"
+
+deploy:
+  stage: deploy
+  only:
+    - master
+  before_script:
+    - echo "before script deploy"
+  script:
+    - echo "deploy"
+
+notify_success:
+  stage: notify
+  allow_failure: true
+  only:
+    - master
+  script: 
+    - echo "NOK"
+
+notify_fail:
+  stage: notify
+  allow_failure: true
+  only:
+    - master
+  when: on_failure
+  script: 
+    echo "ok"
+

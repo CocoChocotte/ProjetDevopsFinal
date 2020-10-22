@@ -1,0 +1,74 @@
+version: "3"
+
+services:
+
+  gitlab:
+    image: 'gitlab/gitlab-ee:latest'
+    restart: unless-stopped
+    hostname: 'gitlab.example.com'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+       external_url 'http://gitlab.127.0.0.1.nip.io:8080'
+       gitlab_rails['gitlab_shell_ssh_port'] = 2224
+       nginx['listen_port'] = 80
+       nginx['listen_https'] = false
+    volumes:
+      - './gitlab/config:/etc/gitlab'
+      - './gitlab/logs:/var/log/gitlab'
+      - './gitlab/data:/var/opt/gitlab'
+    networks:
+      - gitlab
+      - nginx
+      
+  grafana:
+    image: grafana/grafana:latest
+    expose:
+      - "3000"
+    volumes:
+      - ./grafana/:/etc/grafana/provisioning/
+    networks:
+      - grafana
+      - prometheus
+      - nginx
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    networks:
+      - prometheus
+      - grafana
+      - nginx
+          
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./templates-nginx:/etc/nginx/conf.d/
+    ports:
+      - "8080:80"
+    depends_on:
+      - gitlab
+      - sonarqube
+      - grafana
+      - prometheus
+    networks:
+      - nginx
+      
+  sonarqube:
+    image: sonarqube:latest
+    ports:
+      - "9000:9000"
+    networks:
+      - sonarqube
+      - nginx
+
+volumes:
+  git-data:
+
+networks:
+  nginx:
+  gitlab:
+  sonarqube:
+  grafana:
+  prometheus:
+
